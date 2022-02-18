@@ -1,7 +1,11 @@
 package com.nagel.lab3template;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContract;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -39,15 +43,37 @@ public class MainActivity extends AppCompatActivity {
             int id = recipe.getId();
             recipeButtons.setTag(id);
             //nupule  tegevuse määramine
-            recipeButtons.setOnClickListener(view -> openDetailsActivity(name));
+            recipeButtons.setOnClickListener(view -> openDetailsActivity(id));
             layout.addView(recipeButtons);
         }
     }
 
-    private void openDetailsActivity(String name){
-        Intent openWithName = new Intent(this, DetailsActivity.class);
+    private void openDetailsActivity(int id){
+        Intent openWithId = new Intent(this, DetailsActivity.class);
+        openWithId.putExtra("id", id);
+        //startActivity(openWithId);
+        activityResultLauncher.launch(openWithId);
+       /* Intent openWithName = new Intent(this, DetailsActivity.class);
         openWithName.putExtra("name", name);
-        startActivity(openWithName);
+        startActivity(openWithName); */
 
+    }
+
+    ActivityResultLauncher<Intent> activityResultLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if(result.getResultCode() == Activity.RESULT_OK){
+                    Intent intent = result.getData();
+                    if(intent != null){
+                        int recipeId = intent.getIntExtra("id", -1);
+                        int rating = intent.getIntExtra("rating", -1);
+                        UpdateButtonColor(recipeId, rating);
+                    }
+                }
+    });
+
+    private void UpdateButtonColor(int recipeId, int rating) {
+        int colorId = getResources().getIdentifier("rating"+rating, "color", getPackageName());
+        Button btn = ((LinearLayout)this.findViewById(R.id.layout_recipelist)).findViewWithTag(recipeId);
+        btn.setBackgroundColor(getColor(colorId));
     }
 }
